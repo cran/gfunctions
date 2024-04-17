@@ -1,0 +1,22 @@
+import(zoo)
+import(sandwich)
+
+importFrom("methods", "is")
+importFrom("stats", "coef", "model.matrix", "nobs", "pf", "pt", "qnorm", "qt", "resid", "residuals", "ts", "is.ts", "as.ts", "var", "vcov")
+
+export(
+  ##gsummary functions:
+  "gsummary", "gsummary.default", "gsummary.data.frame", "gsummary.lm", "gsummary.glm",
+
+  ##glag methods:
+  "glag", "glag.default"
+)
+
+##methods for gsummary:
+S3method("gsummary", "default")
+S3method("gsummary", "data.frame")
+S3method("gsummary", "lm")
+S3method("gsummary", "glm")
+
+##methods for glag:
+S3method("glag", "default")
