@@ -6,15 +6,15 @@
 
 \description{
 
-\code{\link{glag}()} and \code{\link{gsummary}()} are modifications of the \code{\link{lag}()} and \code{\link{summary}()} functions from the \pkg{stats} package in that they return different information.
+\code{\link[gfunctions]{glag}()} and \code{\link[gfunctions]{gsummary}()} are modifications of the \code{\link[stats]{lag}()} and \code{\link[base]{summary}()} functions from the \pkg{stats} package in that they return different information.
 
 }
 
 \details{
 
 \tabular{ll}{
-	Version: \tab 1.0\cr
-	Date: \tab 2024-04-16\cr
+	Version: \tab 1.1\cr
+	Date: \tab 2025-07-23\cr
 	Licence: \tab GPL-2\cr
 }
 
@@ -23,7 +23,7 @@
 \author{
 
 \tabular{lll}{
-	Genaro Sucarrat: \tab \tab \url{http://www.sucarrat.net/}\cr
+	Genaro Sucarrat: \tab \tab \url{https://www.sucarrat.net/}\cr
 }
 
 Maintainer: Genaro Sucarrat            
@@ -31,7 +31,7 @@ Maintainer: Genaro Sucarrat
 }
 
 \seealso{
-\code{\link{lag}()}, \code{\link{summary}()}
+\code{\link[stats]{lag}()}, \code{\link[base]{summary}()}
 }
 
 \keyword{Statistical Models}

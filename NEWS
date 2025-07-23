@@ -1,3 +1,9 @@
+Version 1.1 (23 July 2025):
+===========================
+
+* Fix: package anchors added to Rd \link{} targets in .Rd files (requested by CRAN)
+
+
 Version 1.0 (16 April 2024):
 ============================
 
