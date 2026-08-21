@@ -13,8 +13,8 @@
 \details{
 
 \tabular{ll}{
-	Version: \tab 1.1\cr
-	Date: \tab 2025-07-23\cr
+	Version: \tab 1.2\cr
+	Date: \tab 2026-08-19\cr
 	Licence: \tab GPL-2\cr
 }
 

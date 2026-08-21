@@ -1,3 +1,19 @@
+Version 1.2 (19 August 2026):
+=============================
+
+* gsummary.data.frame():
+- new argument: "digits"
+- new column in the returned print whenever factors are present: "is.factor()"
+
+* gsummary.lm():
+- new argument: "digits"
+- the returned print contains less scientific notation (p-values in particular)
+
+* gsummary.glm():
+- new argument: "digits"
+- the returned print contains less scientific notation (p-values in particular)
+
+
 Version 1.1 (23 July 2025):
 ===========================
 

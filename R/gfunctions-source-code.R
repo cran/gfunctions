@@ -36,6 +36,8 @@ gsummary.default <- function(object, ...)
 ## Arguments:
 ##
 ##    object      An object of class 'data.frame'
+##    digits      The minimum number of significant digits to be
+##                printed (for most numbers)
 ##
 ## Example:
 ##
@@ -46,26 +48,44 @@ gsummary.default <- function(object, ...)
 ##
 ##==================================================================
 ##create the 'gsummary.data.frame' S3 method:
-gsummary.data.frame <- function(object, ...)
+gsummary.data.frame <- function(object, digits=6, ...)
 {
   varnames <- colnames(object)
   ncols <- length(varnames)
+  
+  ##are any of the variables factors?
+  isFactor <- rep(NA, ncols)
+  for(i in 1:ncols){ isFactor[i] <- is.factor(object[,i]) }
+
+  ##create result object:    
   result <- matrix(NA, ncols, 5)
   colnames(result) <- c("Obs", "Mean", "Std. Dev.", "Min", "Max") 
   rownames(result) <- varnames  
+  result <- as.data.frame(result)
+  if( any(isFactor) ){
+    result <- cbind(result, NA)   
+    colnames(result)[6] <- "is.factor()"
+    result[,6] <- FALSE
+    result[which(isFactor),6] <- TRUE
+  }
   
-  ##fill:
+  ##loop over variables:
   for(i in 1:ncols){
     result[i,"Obs"] <- length( which( !is.na(object[,i]) ) )
-  }
-  result[,"Mean"] <- colMeans(object, na.rm=TRUE)    
-  result[,"Std. Dev."] <- sqrt(diag(var(object, na.rm=TRUE)))
-  for(i in 1:ncols){ result[i,"Min"] <- min(object[,i], na.rm=TRUE) }
-  for(i in 1:ncols){ result[i,"Max"] <- max(object[,i], na.rm=TRUE) }
+    if( !isFactor[i] ){
+      result[i,"Mean"] <- mean(object[,i], na.rm=TRUE)    
+      result[i,"Std. Dev."] <- sqrt(var(object[,i], na.rm=TRUE))
+      result[i,"Min"] <- min(object[,i], na.rm=TRUE)
+      result[i,"Max"] <- max(object[,i], na.rm=TRUE)
+    }
+  } #close for(i)
 
   ##print result:
-  print(result)
-}
+  print.data.frame(result, digits=digits)
+#  format(result, digits=digits, nsmall=digits, scientific=FALSE) 
+   
+} #close gsummary.data.frame()
+
 
 ##==================================================================
 ## gsummary.lm():
@@ -89,6 +109,9 @@ gsummary.data.frame <- function(object, ...)
 ##                  confidence intervals of the coefficient estimates. If
 ##                  NULL, then confidence intervals are not computed.
 ##
+##    digits        The minimum number of significant digits to be
+##                  printed (for most numbers)
+##
 ## Example:
 ##
 ##    set.seed(123)
@@ -101,7 +124,7 @@ gsummary.data.frame <- function(object, ...)
 ##==================================================================
 ##create the 'gsummary.lm' S3 method:
 gsummary.lm <- function(object, vcov.type = c("ordinary", "robust", "hac"),
-  confint.level = 0.95, ...)
+  confint.level = 0.95, digits=6, ...)
 {
   ##record names
   ##------------
@@ -160,7 +183,9 @@ gsummary.lm <- function(object, vcov.type = c("ordinary", "robust", "hac"),
 
   ##create:
   GOFresults <- matrix(NA, 3, 8)
+  GOFresults <- as.data.frame(GOFresults)
   rownames(GOFresults) <- c("Model: ", "Residual: ", "Total: ")
+  colnames(GOFresults) <- c("SS", "df", "", "", "", "", "", "")
   
   ##fill SS part:
   RSS <- sum(residuals(x)^2)
@@ -176,14 +201,13 @@ gsummary.lm <- function(object, vcov.type = c("ordinary", "robust", "hac"),
   GOFresults[3,2] <- n - as.numeric(xHasIntercept)
 
   ##fill gof part:
-  R2 <- 1 - RSS/TSS
+  R2 <- 1 - RSS/TSS #R-squared
   GOFresults[1,8] <- R2
-  GOFresults[2,8] <- 1 - ( (1-R2)*(n-1)/(n-k) )
+  adjR2 <- 1 - ( (1-R2)*(n-1)/(n-k) ) #adjusted R-squared
+  GOFresults[2,8] <- adjR2
   GOFresults[3,8] <- sqrt( RSS/(n-k) )
 
-  ##convert to data frame, complete
-  GOFresults <- as.data.frame(GOFresults)
-  colnames(GOFresults) <- c("SS", "df", "", "", "", "", "", "")
+  ##complete:
   GOFresults[,7] <- c("R-squared =", "Adj. R-squared =", "Root MSE =")
   GOFresults[1:3,3:6] <- ""
         
@@ -191,18 +215,20 @@ gsummary.lm <- function(object, vcov.type = c("ordinary", "robust", "hac"),
   cat("\n")
   cat("Goodness-of-fit:", "\n")
   cat("\n")
-  print(GOFresults)
-  #printCoefmat(GOFresults, signif.stars=FALSE)
+  print.data.frame(GOFresults, digits=digits)
+  #format(GOFresults, digits=digits, nsmall=digits, scientific=FALSE)  
 
   ##F-statistic
   Fresults <- matrix(NA, 1, 5)
+  Fresults <- as.data.frame(Fresults)
   noOfSlopeCoefs <- k - as.numeric(xHasIntercept)
   if( noOfSlopeCoefs > 0 ){
     Fstatistic <- ((TSS-RSS)/noOfSlopeCoefs)/(RSS/(n-k))
-    Fresults[1,1] <- Fstatistic
-    Fresults[1,5] <- pf(Fstatistic, noOfSlopeCoefs, n-k, lower.tail=FALSE)
+    Fresults[1,1] <- format(Fstatistic, digits=digits, scientific=FALSE)
+    PvalTxt <- format(pf(Fstatistic, noOfSlopeCoefs, n-k, lower.tail=FALSE),
+      digits=digits, scientific=FALSE)
+    Fresults[1,5] <- substr(PvalTxt, 1, digits+2)
   }
-  Fresults <- as.data.frame(Fresults)
   Fresults[1,4] <- c("Prob > F =")
   Fresults[1,2:3] <- ""
   colnames(Fresults) <- c("", "", "", "", "")
@@ -211,8 +237,9 @@ gsummary.lm <- function(object, vcov.type = c("ordinary", "robust", "hac"),
   #rownames(Fresults) <- c("F-statistic =")
 
   ##print:
-  print(Fresults)
-    
+  print.data.frame(Fresults, digits=digits)
+  #format(Fresults, digits=digits, scientific=FALSE)  
+  
   ##main table:
   ##-----------
   
@@ -228,16 +255,22 @@ gsummary.lm <- function(object, vcov.type = c("ordinary", "robust", "hac"),
   if( vcov.type=="hac" ){ vcovMat <- NeweyWest(x) }  
   
   ##fill:
-  xresults[,"coefs"] <- coef(x)
+  xresults <- as.data.frame(xresults)
+  coefs <- coef(x)
+  xresults[,"coefs"] <- format(coefs, digits=digits, scientific=FALSE)
   stderrors <- sqrt(diag(vcovMat))
-  xresults[,"std.error"] <- stderrors
-  tstats <- xresults[,"coefs"]/xresults[,"std.error"]
-  xresults[,"t-value"] <- tstats
-  xresults[,"p-value"] <- pt(abs(tstats), n-k, lower.tail=FALSE)*2
+  xresults[,"std.error"] <- format(stderrors, digits=digits, scientific=FALSE)
+  tstats <- coefs/stderrors
+  xresults[,"t-value"] <- format(tstats, digits=digits, scientific=FALSE)
+  PvalTxt <- format(pt(abs(tstats), n-k, lower.tail=FALSE)*2, digits=digits,
+    scientific=FALSE)
+  xresults[,"p-value"] <- substr(PvalTxt, 1, digits+2)
+#  xresults <- as.data.frame(xresults)
     
   ##confidence intervals:
   if( !is.null(confint.level) ){
     confintMat <- matrix(NA, length(coefs), 2)
+    confintMat <- as.data.frame(confintMat)
     ci <- format(100*confint.level, nsmall=0)
     lowerName <- paste0("lower ", ci, "%")
     upperName <- paste0("upper ", ci, "%")
@@ -246,8 +279,8 @@ gsummary.lm <- function(object, vcov.type = c("ordinary", "robust", "hac"),
     tcritval <- qt(1-halfalpha, n-k)
     uppervals <- as.numeric(coefs + tcritval*stderrors)
     lowervals <- as.numeric(coefs - tcritval*stderrors)
-    confintMat[,1] <- lowervals
-    confintMat[,2] <- uppervals
+    confintMat[,1] <- format(lowervals, digits=digits, scientific=FALSE)
+    confintMat[,2] <- format(uppervals, digits=digits, scientific=FALSE)
     rownames(confintMat) <- rownames(xresults)
     confintMat <- as.data.frame(confintMat)
     xresults <- cbind(xresults, confintMat)
@@ -257,8 +290,10 @@ gsummary.lm <- function(object, vcov.type = c("ordinary", "robust", "hac"),
   cat("\n")
   cat("Estimation results:", "\n")
   cat("\n")
-  print(xresults)
-  #printCoefmat(xresults, signif.stars=signif.stars)
+  print.data.frame(xresults, digits=digits)
+  #format(xresults, digits=digits, scientific=FALSE)  
+  #printCoefmat(xresults, digits=digits, signif.stars=FALSE, signif.legend=FALSE,
+  #  P.values=FALSE)
 
 } #close gsummary.lm()
 
@@ -285,6 +320,9 @@ gsummary.lm <- function(object, vcov.type = c("ordinary", "robust", "hac"),
 ##                  confidence intervals of the coefficient estimates. If
 ##                  NULL, then confidence intervals are not computed.
 ##
+##    digits        The minimum number of significant digits to be
+##                  printed
+##
 ## Example:
 ##
 ##    set.seed(123)
@@ -296,7 +334,7 @@ gsummary.lm <- function(object, vcov.type = c("ordinary", "robust", "hac"),
 ##
 ##==================================================================
 ##create the 'gsummary.glm' S3 method:
-gsummary.glm <- function(object, confint.level = 0.95, ...)
+gsummary.glm <- function(object, confint.level = 0.95, digits=6, ...)
 {
   ##record names
   ##------------
@@ -310,13 +348,6 @@ gsummary.glm <- function(object, confint.level = 0.95, ...)
     warning(paste0("'", xName, "' not of class 'glm'"))
   }
     
-#  ##vcov.type argument
-#  ##------------------
-#  types <- c("ordinary", "robust", "hac")
-#  whichType <- charmatch(vcov.type[1], types)
-#  vcov.type <- types[ whichType ]
-#  #Or: vcov.type <- match.arg(vcov.type)
-
   ##check 'confint.level' argument
   ##------------------------------
   if( !is.null(confint.level) ){
@@ -350,64 +381,7 @@ gsummary.glm <- function(object, confint.level = 0.95, ...)
 #  cat("vcov:", vcov.type, "\n")
   cat("Number of obs.:", n, "\n")  
 
-#  ##goodness-of-fit
-#  ##---------------
-#
-#  ##create:
-#  GOFresults <- matrix(NA, 3, 8)
-#  rownames(GOFresults) <- c("Model: ", "Residual: ", "Total: ")
-#  
-#  ##fill SS part:
-#  RSS <- sum(residuals(x)^2)
-#  y <- as.vector(x$model[,1])
-#  ymean <- mean(y)
-#  TSS <- sum( (y-ymean)^2 )
-#  ESS <- TSS-RSS
-#  GOFresults[1,1] <- ESS #fill column 1
-#  GOFresults[2,1] <- RSS
-#  GOFresults[3,1] <- TSS
-#  GOFresults[1,2] <- k - as.numeric(xHasIntercept) #fill column 2
-#  GOFresults[2,2] <- n-k
-#  GOFresults[3,2] <- n - as.numeric(xHasIntercept)
-#
-#  ##fill gof part:
-#  R2 <- 1 - RSS/TSS
-#  GOFresults[1,8] <- R2
-#  GOFresults[2,8] <- 1 - ( (1-R2)*(n-1)/(n-k) )
-#  GOFresults[3,8] <- sqrt( RSS/(n-k) )
-#
-#  ##convert to data frame, complete
-#  GOFresults <- as.data.frame(GOFresults)
-#  colnames(GOFresults) <- c("SS", "df", "", "", "", "", "", "")
-#  GOFresults[,7] <- c("R-squared =", "Adj.R-squared =", "Root MSE =")
-#  GOFresults[1:3,3:6] <- ""
-#        
-#  ##print:
-#  cat("\n")
-#  cat("Goodness-of-fit:", "\n")
-#  cat("\n")
-#  print(GOFresults)
-#  #printCoefmat(GOFresults, signif.stars=FALSE)
-#
-#  ##F-statistic
-#  Fresults <- matrix(NA, 1, 5)
-#  noOfSlopeCoefs <- k - as.numeric(xHasIntercept)
-#  if( noOfSlopeCoefs > 0 ){
-#    Fstatistic <- ((TSS-RSS)/noOfSlopeCoefs)/(RSS/(n-k))
-#    Fresults[1,1] <- Fstatistic
-#    Fresults[1,5] <- pf(Fstatistic, noOfSlopeCoefs, n-k, lower.tail=FALSE)
-#  }
-#  Fresults <- as.data.frame(Fresults)
-#  Fresults[1,4] <- c("Prob > F =")
-#  Fresults[1,2:3] <- ""
-#  colnames(Fresults) <- c("", "", "", "", "")
-#  Fstatname <- paste0("F(", noOfSlopeCoefs, ", ", n-k, ") =")
-#  rownames(Fresults) <- Fstatname
-#  #rownames(Fresults) <- c("F-statistic =")
-#
-#  ##print:
-#  print(Fresults)
-    
+
   ##main table:
   ##-----------
   
@@ -416,21 +390,22 @@ gsummary.glm <- function(object, confint.level = 0.95, ...)
   xresults <- matrix(NA, k, length(xnames))
   colnames(xresults) <- xnames
   rownames(xresults) <- names(coefs)
-  
-  ##vcov matrix:
-  vcovMat <- vcov(x)
+  xresults <- as.data.frame(xresults)
   
   ##fill:
-  xresults[,"coefs"] <- coef(x)
-  stderrors <- sqrt(diag(vcovMat))
-  xresults[,"std.error"] <- stderrors
-  tstats <- xresults[,"coefs"]/xresults[,"std.error"]
-  xresults[,"t-value"] <- tstats
-  xresults[,"p-value"] <- pt(abs(tstats), n-k, lower.tail=FALSE)*2
+  xresults[,"coefs"] <- format(coefs, digits=digits, scientific=FALSE)
+  stderrors <- sqrt(diag(vcovmat))
+  xresults[,"std.error"] <- format(stderrors, digits=digits, scientific=FALSE)
+  tstats <- coefs/stderrors
+  xresults[,"t-value"] <- format(tstats, digits=digits, scientific=FALSE)
+  PvalTxt <- format(pt(abs(tstats), n-k, lower.tail=FALSE)*2, digits=digits,
+    scientific=FALSE)
+  xresults[,"p-value"] <- substr(PvalTxt, 1, digits+2)
     
   ##confidence intervals:
   if( !is.null(confint.level) ){
     confintMat <- matrix(NA, length(coefs), 2)
+    confintMat <- as.data.frame(confintMat)
     ci <- format(100*confint.level, nsmall=0)
     lowerName <- paste0("lower ", ci, "%")
     upperName <- paste0("upper ", ci, "%")
@@ -450,7 +425,7 @@ gsummary.glm <- function(object, confint.level = 0.95, ...)
   cat("\n")
   cat("Estimation results:", "\n")
   cat("\n")
-  print(xresults)
+  print.data.frame(xresults, digits=digits)
   #printCoefmat(xresults, signif.stars=signif.stars)
 
 } #close gsummary.glm()

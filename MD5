@@ -1,7 +1,7 @@
-1d5492eed55432485608b83fed7c784d *DESCRIPTION
+a4a12dfe5b351173625f91eae28a28ce *DESCRIPTION
 74070105cd054bb22f526bab8c385472 *NAMESPACE
-1f78ba37c724fc19ea793c69a7b8fa6d *NEWS
-aa5d1f4c7d91345158a8d124fc8c06cc *R/gfunctions-source-code.R
-541d975db6bd232b20cf099b226364f2 *man/gfunctions-package.Rd
+1cc21e98552cc2ae3e0cc20a95300ddf *NEWS
+861591da519886fbfd0d0b30f917d707 *R/gfunctions-source-code.R
+79cfd03ab251bb5f663a578b6707a5db *man/gfunctions-package.Rd
 2626d0dc209e8b16b5275b6acb61a142 *man/glag.Rd
-35152dcfff86bb611a483f1a0117e5bf *man/gsummary.Rd
+8ca497cf4fd6c8a5af09395fcc39434d *man/gsummary.Rd

@@ -13,15 +13,17 @@
 ## generic:
 gsummary(object, ...)
 \method{gsummary}{default}(object, ...)
-\method{gsummary}{data.frame}(object, ...)
-\method{gsummary}{lm}(object, vcov.type = c("ordinary", "robust", "hac"), confint.level = 0.95, ...)
-\method{gsummary}{glm}(object, confint.level = 0.95, ...)
+\method{gsummary}{data.frame}(object, digits=6, ...)
+\method{gsummary}{lm}(object, vcov.type = c("ordinary", "robust", "hac"), confint.level = 0.95,
+  digits=6, ...)
+\method{gsummary}{glm}(object, confint.level = 0.95, digits=6, ...)
 }
 
 \arguments{
   \item{object}{an object of suitable class, for example \code{\link[base]{data.frame}}, \code{\link[stats]{lm}} or \code{\link[stats]{glm}}. }
   \item{vcov.type}{a character string that determines the variance-vcovariance estimator. If \code{"ordinary"} (default), then the ordinary estimator is used (\code{\link[stats]{vcov.lm}()}). If \code{"robust"}, then the heteroscedasticity robust estimator of White (1980) (\code{\link[sandwich]{vcovHC}()} with \code{type = "HC"}) is used. If \code{"hac"}, then the heteroscedasticity and autocorrelation robust estimator of Newey and West (1987) (\code{\link[sandwich]{NeweyWest}()}) is used. }
   \item{confint.level}{a number between 0 and 1 (the default is \code{0.95}), or \code{NULL}. If a number, then confidence intervals are printed (the default is 95 percent). If \code{NULL}, then confidence intervals are not printed. }
+  \item{digits}{the minimum number of significant digits to be used (for most numbers) }
   \item{\dots}{additional arguments}
 }
 
